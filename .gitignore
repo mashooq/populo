@@ -1,0 +1,15 @@
+/target
+/classes
+/checkouts
+profiles.clj
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+/resources/public/js
+/out
+/.repl
+*.log
+/.env
+/.cljs_rhino_repl
+/*-init.clj
