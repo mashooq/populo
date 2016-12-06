@@ -3,12 +3,12 @@
             [compojure.route :refer [not-found resources]]
             [hiccup.page :refer [include-js include-css html5]]
             [populo.middleware :refer [wrap-middleware]]
-            [populo.views.users :refer [users]]
+            [populo.layout :refer [common]]
             [config.core :refer [env]]))
 
 (defroutes routes
-  (GET "/" [] (users nil))
-  (GET "/users" [] (users nil))
+  (GET "/" [] (common nil "Main"))
+  (GET "/users" [] (common nil "Users"))
   
   (resources "/")
   (not-found "Not Found"))

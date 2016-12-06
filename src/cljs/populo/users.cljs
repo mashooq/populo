@@ -4,31 +4,94 @@
               [secretary.core :as secretary :include-macros true]
               [accountant.core :as accountant]))
 
-(defonce users (atom  (sorted-map "1" {:id "1" :name "Mashooq Badar" :position "Software Craftsman"}
-                                   "2" {:id "2" :name "Sandro Mancuso" :position "Software Craftsman"}
-                                   "3" {:id "3" :name "Pedro Santos" :position "Software Craftsman"}
-                                   
-                                   )))
+(defonce users (atom  (sorted-map "1" {:id "1" :name "Mashooq Badar" :position "Software Craftsman" :archived false}
+                                   "2" {:id "2" :name "Sandro Mancuso" :position "Software Craftsman" :archived false}
+                                   "3" {:id "3" :name "Pedro Santos" :position "Software Craftsman" :archived true})))
+
+(defn toggle-archived [id] 
+  (swap! users update-in  [id :archived] not))
+
+(defn save  [id user] (swap! users assoc id user))
 
 (defn add-user [user]
   (swap! users assoc (:id user) user))
 
-(defn users-page []
-  [:div 
-   (for [user-row (partition-all 2 (vals @users))]
-      [:div {:class "row margin-bottom-20"}
-      (for [user user-row]
-        ^{:key (:id user)}
-          [:div {:class "col-sm-6 sm-margin-bottom-20"}
+(defn text-input [user key]
+  [:input {:type "text" :value (@user key)
+           :on-change #(swap! user assoc key (-> % .-target .-value)) 
+          } ])
+
+(defn checkbox-archived [user]
+  (let [{:keys [id archived]} @user]
+   [:input.toggle {:type "checkbox" :checked archived
+                  :on-change #(toggle-archived id)}
+   ]))
+
+(defn user-tile [user]
+  (let [tile-mode (atom false)]
+    (fn [user]
+      (case @tile-mode 
+        :editing
+          (let [edited-user (atom user)]
+            [:div {:class "col-sm-4 sm-margin-bottom-20"}
               [:div {:class "profile-blog"}
-                  [:img {:class "rounded-x" :src "images/person.png"}]
-                  [:div {:class "name-location"}
-                      [:strong (:name user)]
-                      [:span (:position user)]]
+                  [:div {:class "sky-form"}
+                      [:label {:class "input"} [text-input edited-user :name]]  
+                      [:label {:class "input"} [text-input edited-user :position]]  
+                      [:label {:class "checkbox"} [checkbox-archived edited-user] [:i] " Archived" ]  
+                      ]
                   [:div {:class "clearfix margin-bottom-20"}]
                   [:hr]
-                  [:ul {:class "list-inline share-list"}
-                      [:li [:i {:class "fa fa-edit"}][:a {:href "#"} "Edit"]]
-                      [:li [:i {:class "fa fa-book"}][:a {:href "#"} "Archive"]]]]])])])
+                  [:ul {:class "list-inline"}
+                      [:li [:button { :on-click #(do (reset! tile-mode :display) (save (:id @edited-user) @edited-user))
+                                      :href "#" :class "btn-u rounded btn-u-sm btn-u-default"} 
+                            [:i {:class "fa fa-save"}]]]
+                      [:li [:button { :on-click #(do (reset! tile-mode :display) (reset! edited-user user))
+                                      :href "#" :class "btn-u rounded btn-u-sm btn-u-red"} 
+                            [:i {:class "fa fa-times"}]]]
+                      ]
+                  ]])
+
+          
+          [:div {:class "col-sm-4 sm-margin-bottom-20"}
+            [:div {:class "profile-blog" }
+                [:img {:class "rounded-x" :src "images/person.png"}]
+                [:div {:class "name-location"}
+                    [:a {:style {:float "right"} :on-click #(reset! tile-mode :editing) :href "#"} [:i {:class "fa fa-edit"}]  ] 
+                    [:strong (:name user)]
+                    [:span (:position user)]]
+                ]]))))
+
+(defn panel-title [title]
+  [:div {:class "panel-heading overflow-h margin-top-20"}
+      [:h2 {:class "panel-title heading-sm pull-left"}
+       	[:i {:class "fa fa-users"}] title]]
+  )
+
+(defn user-list [title filt]
+  [:div {:class "panel panel-profile" }
+      (panel-title title) 
+      [:div {:class "profile-body"}
+      (for [user-row (partition-all 3 (filter filt (vals @users))  )]
+          ^{:key (str "row-" (:id (first user-row)))}
+          [:div {:class "row margin-bottom-10"}
+          (for [user user-row] ^{:key (:id user)} [user-tile user])])]]
+  )
+
+(defn users-page []
+  [:div {:class "wrapper"}
+   [:div {:class "container content"}
+            ]
+	 [:div {:class "container profile"}
+    [:div {:class "row"} 
+      [:div {:class "col-md-6 col-md-offset-3 margin-bottom-20"}
+                [:div {:class "input-group"}
+                    [:input {:type "text" :class "form-control" :placeholder "Search people ..."}]
+                    [:span {:class "input-group-btn"}
+                        [:button {:class "btn-u" :type "button"}[:i {:class "fa fa-search"}]]]]]]
+      [:div {:class "panel-group" :id "user-lists"}
+                  (user-list "Active" #(not  (:archived %)))              
+                  (user-list "Archived" #(:archived %))]]
+])
 
 
