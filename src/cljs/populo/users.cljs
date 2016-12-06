@@ -8,6 +8,8 @@
                                    "2" {:id "2" :name "Sandro Mancuso" :position "Software Craftsman" :archived false}
                                    "3" {:id "3" :name "Pedro Santos" :position "Software Craftsman" :archived true})))
 
+(def search-term (atom ""))
+
 (defn toggle-archived [id user] 
   (swap! user update  :archived not))
 
@@ -15,6 +17,16 @@
 
 (defn add-user [user]
   (swap! users assoc (:id user) user))
+
+(defn has-term [user] 
+  (seq (filter #(re-matches (re-pattern (str "(?i).*" @search-term ".*")) (str %)) (vals user)))
+)
+
+(defn search-users [filt]
+  (if (clojure.string/blank? @search-term) 
+    (filter filt (vals @users))
+    (doall (filter has-term (filter filt (vals @users))))
+    ))
 
 (defn text-input [user key]
   [:input {:type "text" :value (@user key)
@@ -72,7 +84,7 @@
   [:div {:class "panel panel-profile" }
       (panel-title title) 
       [:div {:class "profile-body"}
-      (for [user-row (partition-all 3 (filter filt (vals @users))  )]
+      (for [user-row (partition-all 3 (search-users filt )  )]
           ^{:key (str "row-" (:id (first user-row)))}
           [:div {:class "row margin-bottom-10"}
           (for [user user-row] ^{:key (:id user)} [user-tile user])])]]
@@ -81,16 +93,17 @@
 (defn users-page []
   [:div {:class "wrapper"}
    [:div {:class "container content"} ]
-	 [:div {:class "container profile"}
-    [:div {:class "row"} 
-      [:div {:class "col-md-6 col-md-offset-3"}
-                [:div {:class "input-group"}
-                    [:input {:type "text" :class "form-control" :placeholder "Search people ..."}]
-                    [:span {:class "input-group-btn"}
-                        [:button {:class "btn-u" :type "button"}[:i {:class "fa fa-search"}]]]]]]
-      [:div {:class "panel-group" :id "user-lists"}
-                  (user-list "Active" #(not  (:archived %)))              
-                  (user-list "Archived" #(:archived %))]]
-])
+    (let [term (atom "")] 
+      [:div {:class "container profile"}
+      [:div {:class "row"} 
+        [:div {:class "col-md-6 col-md-offset-3"}
+                  [:div {:class "input-group"}
+                      [:input {:type "text" :class "form-control" :placeholder "Search people ..."
+                              :on-change #(reset! search-term (-> % .-target .-value))}]
+                      [:span {:class "input-group-btn"}
+                          [:button {:class "btn-u btn-u-default disabled" :disabled "disabled" :type "button"}[:i {:class "fa fa-search"}]]]]]]
+        [:div {:class "panel-group" :id "user-lists"}
+                    (user-list "Active" #(not  (:archived %)))              
+                    (user-list "Archived" #(:archived %))]])])
 
 
