@@ -8,8 +8,8 @@
                                    "2" {:id "2" :name "Sandro Mancuso" :position "Software Craftsman" :archived false}
                                    "3" {:id "3" :name "Pedro Santos" :position "Software Craftsman" :archived true})))
 
-(defn toggle-archived [id] 
-  (swap! users update-in  [id :archived] not))
+(defn toggle-archived [id user] 
+  (swap! user update  :archived not))
 
 (defn save  [id user] (swap! users assoc id user))
 
@@ -24,7 +24,7 @@
 (defn checkbox-archived [user]
   (let [{:keys [id archived]} @user]
    [:input.toggle {:type "checkbox" :checked archived
-                  :on-change #(toggle-archived id)}
+                  :on-change #(toggle-archived id user)}
    ]))
 
 (defn user-tile [user]
@@ -80,11 +80,10 @@
 
 (defn users-page []
   [:div {:class "wrapper"}
-   [:div {:class "container content"}
-            ]
+   [:div {:class "container content"} ]
 	 [:div {:class "container profile"}
     [:div {:class "row"} 
-      [:div {:class "col-md-6 col-md-offset-3 margin-bottom-20"}
+      [:div {:class "col-md-6 col-md-offset-3"}
                 [:div {:class "input-group"}
                     [:input {:type "text" :class "form-control" :placeholder "Search people ..."}]
                     [:span {:class "input-group-btn"}
