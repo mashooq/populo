@@ -25,8 +25,7 @@
 (defn search-users [filt]
   (if (clojure.string/blank? @search-term) 
     (filter filt (vals @users))
-    (doall (filter has-term (filter filt (vals @users))))
-    ))
+    (doall (filter has-term (filter filt (vals @users))))))
 
 (defn text-input [user key]
   [:input {:type "text" :value (@user key)
@@ -39,46 +38,50 @@
                   :on-change #(toggle-archived id user)}
    ]))
 
+(defn edit-user-tile [tile-mode user]
+  (let [edited-user (atom user)]
+    [:div {:class "col-sm-4 sm-margin-bottom-20"}
+      [:div {:class "profile-blog"}
+          [:div {:class "sky-form"}
+              [:label {:class "input"} [text-input edited-user :name]]  
+              [:label {:class "input"} [text-input edited-user :position]]  
+              [:label {:class "checkbox"} [checkbox-archived edited-user] [:i] " Archived" ]  
+              ]
+          [:div {:class "clearfix margin-bottom-20"}]
+          [:hr]
+          [:ul {:class "list-inline"}
+              [:li [:button { :on-click #(do (reset! tile-mode :display) (save (:id @edited-user) @edited-user))
+                              :href "#" :class "btn-u rounded btn-u-sm btn-u-default"} 
+                    [:i {:class "fa fa-save"}]]]
+              [:li [:button { :on-click #(do (reset! tile-mode :display) (reset! edited-user user))
+                              :href "#" :class "btn-u rounded btn-u-sm btn-u-red"} 
+                    [:i {:class "fa fa-times"}]]]
+              ]
+          ]]))
+
+(defn view-user-tile [tile-mode user]
+  [:div {:class "col-sm-4 sm-margin-bottom-20"}
+    [:div {:class "profile-blog" }
+        [:img {:class "rounded-x" :src "images/person.png"}]
+        [:div {:class "name-location"}
+            [:a {:style {:float "right"} :on-click #(reset! tile-mode :editing) :href "#"} [:i {:class "fa fa-edit"}]  ] 
+            [:strong (:name user)]
+            [:span (:position user)]]
+        ]]
+)
+
 (defn user-tile [user]
   (let [tile-mode (atom false)]
     (fn [user]
       (case @tile-mode 
-        :editing
-          (let [edited-user (atom user)]
-            [:div {:class "col-sm-4 sm-margin-bottom-20"}
-              [:div {:class "profile-blog"}
-                  [:div {:class "sky-form"}
-                      [:label {:class "input"} [text-input edited-user :name]]  
-                      [:label {:class "input"} [text-input edited-user :position]]  
-                      [:label {:class "checkbox"} [checkbox-archived edited-user] [:i] " Archived" ]  
-                      ]
-                  [:div {:class "clearfix margin-bottom-20"}]
-                  [:hr]
-                  [:ul {:class "list-inline"}
-                      [:li [:button { :on-click #(do (reset! tile-mode :display) (save (:id @edited-user) @edited-user))
-                                      :href "#" :class "btn-u rounded btn-u-sm btn-u-default"} 
-                            [:i {:class "fa fa-save"}]]]
-                      [:li [:button { :on-click #(do (reset! tile-mode :display) (reset! edited-user user))
-                                      :href "#" :class "btn-u rounded btn-u-sm btn-u-red"} 
-                            [:i {:class "fa fa-times"}]]]
-                      ]
-                  ]])
+        :editing (edit-user-tile tile-mode user)
+         (view-user-tile tile-mode user)))))
 
-          
-          [:div {:class "col-sm-4 sm-margin-bottom-20"}
-            [:div {:class "profile-blog" }
-                [:img {:class "rounded-x" :src "images/person.png"}]
-                [:div {:class "name-location"}
-                    [:a {:style {:float "right"} :on-click #(reset! tile-mode :editing) :href "#"} [:i {:class "fa fa-edit"}]  ] 
-                    [:strong (:name user)]
-                    [:span (:position user)]]
-                ]]))))
 
 (defn panel-title [title]
   [:div {:class "panel-heading overflow-h margin-top-20"}
       [:h2 {:class "panel-title heading-sm pull-left"}
-       	[:i {:class "fa fa-users"}] title]]
-  )
+       	[:i {:class "fa fa-users"}] title]])
 
 (defn user-list [title filt]
   [:div {:class "panel panel-profile" }
@@ -87,8 +90,7 @@
       (for [user-row (partition-all 3 (search-users filt )  )]
           ^{:key (str "row-" (:id (first user-row)))}
           [:div {:class "row margin-bottom-10"}
-          (for [user user-row] ^{:key (:id user)} [user-tile user])])]]
-  )
+          (for [user user-row] ^{:key (:id user)} [user-tile user])])]])
 
 (defn users-page []
   [:div {:class "wrapper"}
