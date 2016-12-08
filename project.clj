@@ -8,6 +8,7 @@
                  [ring-server "0.4.0"]
                  [reagent "0.6.0"]
                  [reagent-utils "0.2.0"]
+                 [reagent-forms "0.5.28"] 
                  [ring "1.5.0"]
                  [ring/ring-defaults "0.2.1"]
                  [compojure "1.5.1"]

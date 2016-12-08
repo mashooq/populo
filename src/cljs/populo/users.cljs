@@ -1,52 +1,49 @@
 (ns populo.users
     (:require [reagent.core :as reagent :refer [atom]]
               [reagent.session :as session]
+              [reagent-forms.core :refer [bind-fields]]
               [secretary.core :as secretary :include-macros true]
               [accountant.core :as accountant]))
 
-(defonce users (atom  (sorted-map "1" {:id "1" :name "Mashooq Badar" :position "Software Craftsman" :archived false}
-                                   "2" {:id "2" :name "Sandro Mancuso" :position "Software Craftsman" :archived false}
-                                   "3" {:id "3" :name "Pedro Santos" :position "Software Craftsman" :archived true})))
+(defonce users (atom  (sorted-map "1" {:id "1" :name "Mashooq Badar" :position "Software Craftsman" :archived false :roles [:1 :2]}
+                                   "2" {:id "2" :name "Sandro Mancuso" :position "Software Craftsman" :archived false :roles []}
+                                   "3" {:id "3" :name "Pedro Santos" :position "Software Craftsman" :archived true :roles []})))
 
-(def search-term (atom ""))
-
-(defn toggle-archived [id user] 
-  (swap! user update  :archived not))
 
 (defn save  [id user] (swap! users assoc id user))
-
 (defn add-user [user]
   (swap! users assoc (:id user) user))
 
+(defonce search-term (atom ""))
+
 (defn has-term [user] 
-  (seq (filter #(re-matches (re-pattern (str "(?i).*" @search-term ".*")) (str %)) (vals user)))
-)
+  (seq (filter #(re-matches (re-pattern (str "(?i).*" @search-term ".*")) (str %)) (vals user))))
 
 (defn search-users [filt]
   (if (clojure.string/blank? @search-term) 
     (filter filt (vals @users))
     (doall (filter has-term (filter filt (vals @users))))))
 
-(defn text-input [user key]
-  [:input {:type "text" :value (@user key)
-           :on-change #(swap! user assoc key (-> % .-target .-value)) 
-          } ])
-
-(defn checkbox-archived [user]
-  (let [{:keys [id archived]} @user]
-   [:input.toggle {:type "checkbox" :checked archived
-                  :on-change #(toggle-archived id user)}
-   ]))
+(def edit-user-tile-template 
+  [:div {:class "sky-form"}
+              [:label {:class "input"} [:input {:field :text :id :name}]]  
+              [:label {:class "input"} [:input {:field :text :id :position}]]  
+              [:label {:class "checkbox"} [:input {:field :checkbox :id :archived}] [:i] " Archived" ]  
+              [:label {:class "select select-multiple"}
+              [:div {:class "panel panel-green"} 
+                [:div {:class "panel-body " :style {:max-height "200px" :overflow-y "scroll"}}
+                  [:ul.list-group { :field :multi-select :id :roles}
+                    [:li.list-group-item {:key :1} "Memento: Admin"]
+                    [:li.list-group-item {:key :2} "Memento: User"]
+                    [:li.list-group-item {:key :3} "Monitor: Admin"]
+                    [:li.list-group-item {:key :4} "Monitor: User"]]]]
+                    ]])
 
 (defn edit-user-tile [tile-mode user]
   (let [edited-user (atom user)]
     [:div {:class "col-sm-4 sm-margin-bottom-20"}
       [:div {:class "profile-blog"}
-          [:div {:class "sky-form"}
-              [:label {:class "input"} [text-input edited-user :name]]  
-              [:label {:class "input"} [text-input edited-user :position]]  
-              [:label {:class "checkbox"} [checkbox-archived edited-user] [:i] " Archived" ]  
-              ]
+          [bind-fields edit-user-tile-template edited-user]     
           [:div {:class "clearfix margin-bottom-20"}]
           [:hr]
           [:ul {:class "list-inline"}
@@ -67,8 +64,7 @@
             [:a {:style {:float "right"} :on-click #(reset! tile-mode :editing) :href "#"} [:i {:class "fa fa-edit"}]  ] 
             [:strong (:name user)]
             [:span (:position user)]]
-        ]]
-)
+        ]])
 
 (defn user-tile [user]
   (let [tile-mode (atom false)]
@@ -99,11 +95,11 @@
       [:div {:class "container profile"}
       [:div {:class "row"} 
         [:div {:class "col-md-6 col-md-offset-3"}
-                  [:div {:class "input-group"}
-                      [:input {:type "text" :class "form-control" :placeholder "Search people ..."
-                              :on-change #(reset! search-term (-> % .-target .-value))}]
-                      [:span {:class "input-group-btn"}
-                          [:button {:class "btn-u btn-u-default disabled" :disabled "disabled" :type "button"}[:i {:class "fa fa-search"}]]]]]]
+            [:div {:class "input-group"}
+                [:input {:type "text" :class "form-control" :placeholder "Search people ..."
+                        :on-change #(reset! search-term (-> % .-target .-value))}]
+                [:span {:class "input-group-btn"}
+                    [:button {:class "btn-u btn-u-default disabled" :disabled "disabled" :type "button"}[:i {:class "fa fa-search"}]]]]]]
         [:div {:class "panel-group" :id "user-lists"}
                     (user-list "Active" #(not  (:archived %)))              
                     (user-list "Archived" #(:archived %))]])])
