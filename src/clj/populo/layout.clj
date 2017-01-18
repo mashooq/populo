@@ -2,7 +2,7 @@
   (:use [hiccup.core :only (html)]
         [hiccup.page :only (html5 include-css)]))
 
-(defn common [userDetails title]
+(defn common [userDetails title & body]
   (html5
     [:head
      [:meta {:charset "utf-8"}]
@@ -38,11 +38,4 @@
     [:script {:src "assets/plugins/sky-forms-pro/skyforms/js/jquery.form.min.js"}]
     [:script {:src "assets/plugins/sky-forms-pro/skyforms/js/jquery.validate.min.js"}]
 
-    [:body 
-      [:div#app
-              [:h3 "ClojureScript has not been compiled!"]
-              [:p "please run "
-              [:b "lein figwheel"]
-              " in order to start the compiler"]]
-     
-      [:script {:src "js/app.js"}]]))
+    [:body  body]))

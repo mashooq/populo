@@ -9,8 +9,6 @@
 ;; -------------------------
 ;; Views
 
-
-
 (defn home-page []
   [:div [:h2 "Welcome to populo"]
    [:div [:a {:href "/about"} "go to about page"]]])

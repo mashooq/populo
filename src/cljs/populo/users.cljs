@@ -62,7 +62,7 @@
         [:img {:class "rounded-x" :src "images/person.png"}]
         [:div {:class "name-location"}
             [:a {:style {:float "right"} :on-click #(reset! tile-mode :editing) :href "#"} [:i {:class "fa fa-edit"}]  ] 
-            [:strong (:name user)]
+            [:strong (:name user) ]
             [:span (:position user)]]
         ]])
 
